@@ -1,4 +1,4 @@
-package com.javarush.telegram;
+package com.yamahamba.careerbro;
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
@@ -14,7 +14,6 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
-import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeAllPrivateChats;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeChat;
 import org.telegram.telegrambots.meta.api.objects.menubutton.MenuButtonCommands;
 import org.telegram.telegrambots.meta.api.objects.menubutton.MenuButtonDefault;
@@ -132,12 +131,59 @@ public class MultiSessionTelegramBot extends TelegramLongPollingBot {
         return executeTelegramApiMethod(command);
     }
 
+    /**
+     * Обновляет ранее отправленное сообщение.
+     * Если текст короче лимита Telegram — редактируем.
+     * Если длинный — редактируем заглушку и отправляем ответ несколькими сообщениями ниже.
+     */
     public void updateTextMessage(Message message, String text) {
+        if (text == null) text = "";
+
+        final int TELEGRAM_LIMIT = 4000;
+
+        // Короткий текст — обычное редактирование
+        if (text.length() <= TELEGRAM_LIMIT) {
+            EditMessageText command = new EditMessageText();
+            command.setChatId(message.getChatId());
+            command.setMessageId(message.getMessageId());
+            command.setText(text);
+            executeTelegramApiMethod(command);
+            return;
+        }
+
+        // Длинный текст — сначала меняем "Генерация..." на заглушку
         EditMessageText command = new EditMessageText();
         command.setChatId(message.getChatId());
         command.setMessageId(message.getMessageId());
-        command.setText(text);
+        command.setText("Ответ получился объёмным — отправляю его частями ниже 👇");
         executeTelegramApiMethod(command);
+
+        // Затем шлём кусками
+        sendLongTextChunks(text, TELEGRAM_LIMIT);
+    }
+
+    /**
+     * Разбивает длинный текст на части и отправляет последовательно несколько сообщений.
+     */
+    private void sendLongTextChunks(String text, int limit) {
+        int offset = 0;
+        int len = text.length();
+
+        while (offset < len) {
+            int end = Math.min(offset + limit, len);
+
+            // стараемся резать по переводу строки, чтобы не обрывать фразы
+            if (end < len) {
+                int lastNewLine = text.lastIndexOf('\n', end);
+                if (lastNewLine > offset + 500) { // чтобы кусок не был слишком коротким
+                    end = lastNewLine;
+                }
+            }
+
+            String chunk = text.substring(offset, end);
+            sendTextMessage(chunk.trim());
+            offset = end;
+        }
     }
 
     public Message sendTextButtonsMessage(String text, String... buttons) {

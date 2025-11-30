@@ -1,4 +1,4 @@
-package com.javarush.telegram;
+package com.yamahamba.careerbro;
 
 public class UserInfo {
     // Для карьерного режима
@@ -51,4 +51,5 @@ public class UserInfo {
 
         return result;
     }
+
 }
