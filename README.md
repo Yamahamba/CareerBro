@@ -87,9 +87,15 @@ cd CareerBro
 В корне создаём файл:
 
 ```env
-OPENAI_API_KEY=your_openai_key
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 TELEGRAM_BOT_NAME=yamahamba_ai2_bot
+TELEGRAM_BOT_TOKEN=your_telegram_token_here
+OPENAI_API_KEY=your_openai_key_here
+OPENAI_INPUT_CHAR_LIMIT=30000
+OPENAI_TOTAL_CHAR_LIMIT=30000
+OPENAI_MODEL=gpt-5.1
+OPENAI_MAX_TOKENS=9000
+OPENAI_TEMPERATURE=0.6
+OPENAI_TIMEOUT_SECONDS=180
 ```
 
 ### **3. Сборка и запуск**
